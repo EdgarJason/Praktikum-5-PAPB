@@ -1,19 +1,26 @@
 package com.example.papb5.data.repository
 
 import com.example.papb5.data.model.Student
-import com.example.papb5.data.source.StudentLocalDataSource
+import com.example.papb5.data.source.StudentRemoteDataSource
 
 interface StudentRepository {
-    fun getStudents(): List<Student>
-    fun getStudentById(id: Int): Student?
+    fun getStudents(callback: (List<Student>?, String?) -> Unit)
+    fun getStudentById(id: Int, callback: (Student?, String?) -> Unit)
+    fun searchStudents(query: String, callback: (List<Student>?, String?) -> Unit)
 }
 
 class DefaultStudentRepository(
-    private val dataSource: StudentLocalDataSource
+    private val remoteDataSource: StudentRemoteDataSource
 ) : StudentRepository {
-    override fun getStudents(): List<Student> =
-        dataSource.getStudents()
+    override fun getStudents(callback: (List<Student>?, String?) -> Unit) {
+        remoteDataSource.getStudents(callback)
+    }
 
-    override fun getStudentById(id: Int): Student? =
-        dataSource.getStudentById(id)
+    override fun getStudentById(id: Int, callback: (Student?, String?) -> Unit) {
+        remoteDataSource.getStudentById(id, callback)
+    }
+
+    override fun searchStudents(query: String, callback: (List<Student>?, String?) -> Unit) {
+        remoteDataSource.searchStudents(query, callback)
+    }
 }

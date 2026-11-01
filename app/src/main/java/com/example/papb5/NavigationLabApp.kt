@@ -9,9 +9,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.papb5.data.network.RetrofitClient
 import com.example.papb5.data.repository.DefaultStudentRepository
 import com.example.papb5.data.repository.StudentRepository
-import com.example.papb5.data.source.StudentLocalDataSource
+import com.example.papb5.data.source.StudentRemoteDataSource
 import com.example.papb5.ui.detail.DetailViewModel
 import com.example.papb5.ui.home.HomeViewModel
 import com.example.papb5.ui.screen.AboutScreen
@@ -21,8 +22,8 @@ import com.example.papb5.ui.screen.ProfileScreen
 
 @Composable
 fun NavigationLabApp() {
-    val dataSource = remember { StudentLocalDataSource() }
-    val repository: StudentRepository = remember { DefaultStudentRepository(dataSource) }
+    val remoteDataSource = remember { StudentRemoteDataSource(RetrofitClient.apiService) }
+    val repository: StudentRepository = remember { DefaultStudentRepository(remoteDataSource) }
 
     val navController = rememberNavController()
 
@@ -36,6 +37,8 @@ fun NavigationLabApp() {
             )
             HomeScreen(
                 uiState = homeViewModel.uiState,
+                onSearchQueryChange = homeViewModel::onSearchQueryChange,
+                onSearchSubmit = homeViewModel::searchStudents,
                 onOpenDetail = { id ->
                     navController.navigate(Routes.detail(id))
                 },
@@ -72,14 +75,10 @@ fun NavigationLabApp() {
             )
         }
         composable(Routes.PROFILE) {
-            ProfileScreen(
-                onBack = { navController.popBackStack() }
-            )
+            ProfileScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.ABOUT) {
-            AboutScreen(
-                onBack = { navController.popBackStack() }
-            )
+            AboutScreen(onBack = { navController.popBackStack() })
         }
     }
 }

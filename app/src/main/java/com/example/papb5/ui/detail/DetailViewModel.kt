@@ -15,11 +15,15 @@ class DetailViewModel(
         private set
 
     fun loadStudent(id: Int) {
-        val student = repository.getStudentById(id)
-        uiState = if (student != null) {
-            DetailUiState(student = student)
-        } else {
-            DetailUiState(errorMessage = "Student tidak ditemukan")
+        uiState = uiState.copy(isLoading = true, errorMessage = null)
+        repository.getStudentById(id) { student, error ->
+            if (error != null) {
+                uiState = DetailUiState(isLoading = false, errorMessage = error)
+            } else if (student != null) {
+                uiState = DetailUiState(isLoading = false, student = student)
+            } else {
+                uiState = DetailUiState(isLoading = false, errorMessage = "Student tidak ditemukan")
+            }
         }
     }
 

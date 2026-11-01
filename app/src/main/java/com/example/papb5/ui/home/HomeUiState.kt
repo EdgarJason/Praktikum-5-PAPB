@@ -4,6 +4,7 @@ import com.example.papb5.data.model.Student
 
 data class HomeUiState(
     val students: List<Student> = emptyList(),
+    val searchQuery: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )

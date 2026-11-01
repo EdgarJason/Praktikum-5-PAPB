@@ -19,11 +19,41 @@ class HomeViewModel(
     }
 
     fun loadStudents() {
-        val list = repository.getStudents()
-        uiState = if (list.isNotEmpty()) {
-            HomeUiState(students = list)
+        uiState = uiState.copy(isLoading = true, errorMessage = null)
+        repository.getStudents { students, error ->
+            if (error != null) {
+                uiState = uiState.copy(isLoading = false, errorMessage = error)
+            } else {
+                uiState = uiState.copy(
+                    isLoading = false,
+                    students = students ?: emptyList(),
+                    errorMessage = if (students.isNullOrEmpty()) "Tidak ada data mahasiswa" else null
+                )
+            }
+        }
+    }
+
+    fun onSearchQueryChange(newQuery: String) {
+        uiState = uiState.copy(searchQuery = newQuery)
+    }
+
+    fun searchStudents() {
+        val query = uiState.searchQuery.trim()
+        if (query.isEmpty()) {
+            loadStudents()
         } else {
-            HomeUiState(errorMessage = "Tidak ada data mahasiswa")
+            uiState = uiState.copy(isLoading = true, errorMessage = null)
+            repository.searchStudents(query) { students, error ->
+                if (error != null) {
+                    uiState = uiState.copy(isLoading = false, errorMessage = error)
+                } else {
+                    uiState = uiState.copy(
+                        isLoading = false,
+                        students = students ?: emptyList(),
+                        errorMessage = if (students.isNullOrEmpty()) "Mahasiswa tidak ditemukan" else null
+                    )
+                }
+            }
         }
     }
 
