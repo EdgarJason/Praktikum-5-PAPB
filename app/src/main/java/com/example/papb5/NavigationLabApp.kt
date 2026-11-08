@@ -2,6 +2,8 @@ package com.example.papb5
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -35,10 +37,13 @@ fun NavigationLabApp() {
             val homeViewModel: HomeViewModel = viewModel(
                 factory = HomeViewModel.factory(repository)
             )
+            val homeUiState by homeViewModel.uiState.collectAsState()
+
             HomeScreen(
-                uiState = homeViewModel.uiState,
+                uiState = homeUiState,
                 onSearchQueryChange = homeViewModel::onSearchQueryChange,
                 onSearchSubmit = homeViewModel::searchStudents,
+                onRefresh = homeViewModel::refresh,
                 onOpenDetail = { id ->
                     navController.navigate(Routes.detail(id))
                 },
@@ -63,13 +68,14 @@ fun NavigationLabApp() {
             val detailViewModel: DetailViewModel = viewModel(
                 factory = DetailViewModel.factory(repository)
             )
+            val detailUiState by detailViewModel.uiState.collectAsState()
 
             LaunchedEffect(studentId) {
                 detailViewModel.loadStudent(studentId)
             }
 
             DetailScreen(
-                uiState = detailViewModel.uiState,
+                uiState = detailUiState,
                 onBack = { navController.popBackStack() },
                 onOpenProfile = { navController.navigate(Routes.PROFILE) }
             )

@@ -1,6 +1,7 @@
 package com.example.papb5.ui.screen
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,12 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +31,7 @@ fun HomeScreen(
     uiState: HomeUiState,
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: () -> Unit,
+    onRefresh: () -> Unit,
     onOpenDetail: (Int) -> Unit,
     onOpenProfile: () -> Unit,
     onOpenAbout: () -> Unit
@@ -42,17 +45,27 @@ fun HomeScreen(
         Text("Home - Daftar Mahasiswa", style = MaterialTheme.typography.headlineMedium)
 
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedButton(onClick = onOpenProfile) {
-                Text("Profile")
-            }
-            OutlinedButton(onClick = onOpenAbout) {
-                Text("About")
-            }
-            OutlinedButton(onClick = { onOpenDetail(9999) }) {
-                Text("Tes ID Tidak Valid")
-            }
+            AssistChip(
+                onClick = onRefresh,
+                label = { Text("Refresh") }
+            )
+            AssistChip(
+                onClick = onOpenProfile,
+                label = { Text("Profile") }
+            )
+            AssistChip(
+                onClick = onOpenAbout,
+                label = { Text("About") }
+            )
+            AssistChip(
+                onClick = { onOpenDetail(9999) },
+                label = { Text("Tes ID Tidak Valid") }
+            )
         }
 
         Row(

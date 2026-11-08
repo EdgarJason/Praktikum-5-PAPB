@@ -1,57 +1,104 @@
 package com.example.papb5.ui.home
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.example.papb5.data.repository.StudentRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val repository: StudentRepository
 ) : ViewModel() {
 
-    var uiState by mutableStateOf(HomeUiState())
-        private set
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
         loadStudents()
     }
 
     fun loadStudents() {
-        uiState = uiState.copy(isLoading = true, errorMessage = null)
-        repository.getStudents { students, error ->
-            if (error != null) {
-                uiState = uiState.copy(isLoading = false, errorMessage = error)
-            } else {
-                uiState = uiState.copy(
-                    isLoading = false,
-                    students = students ?: emptyList(),
-                    errorMessage = if (students.isNullOrEmpty()) "Tidak ada data mahasiswa" else null
-                )
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            repository.getStudents { students, error ->
+                if (error != null) {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error) }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            students = students ?: emptyList(),
+                            errorMessage = if (students.isNullOrEmpty()) "Tidak ada data mahasiswa" else null
+                        )
+                    }
+                }
             }
         }
     }
 
     fun onSearchQueryChange(newQuery: String) {
-        uiState = uiState.copy(searchQuery = newQuery)
+        _uiState.update { it.copy(searchQuery = newQuery) }
     }
 
     fun searchStudents() {
-        val query = uiState.searchQuery.trim()
+        val query = _uiState.value.searchQuery.trim()
         if (query.isEmpty()) {
             loadStudents()
         } else {
-            uiState = uiState.copy(isLoading = true, errorMessage = null)
-            repository.searchStudents(query) { students, error ->
-                if (error != null) {
-                    uiState = uiState.copy(isLoading = false, errorMessage = error)
-                } else {
-                    uiState = uiState.copy(
-                        isLoading = false,
-                        students = students ?: emptyList(),
-                        errorMessage = if (students.isNullOrEmpty()) "Mahasiswa tidak ditemukan" else null
-                    )
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                repository.searchStudents(query) { students, error ->
+                    if (error != null) {
+                        _uiState.update { it.copy(isLoading = false, errorMessage = error) }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                students = students ?: emptyList(),
+                                errorMessage = if (students.isNullOrEmpty()) "Mahasiswa tidak ditemukan" else null
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val query = _uiState.value.searchQuery.trim()
+            if (query.isEmpty()) {
+                repository.getStudents { students, error ->
+                    if (error != null) {
+                        _uiState.update { it.copy(isLoading = false, errorMessage = error) }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                students = students ?: emptyList(),
+                                errorMessage = if (students.isNullOrEmpty()) "Tidak ada data mahasiswa" else null
+                            )
+                        }
+                    }
+                }
+            } else {
+                repository.searchStudents(query) { students, error ->
+                    if (error != null) {
+                        _uiState.update { it.copy(isLoading = false, errorMessage = error) }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                students = students ?: emptyList(),
+                                errorMessage = if (students.isNullOrEmpty()) "Mahasiswa tidak ditemukan" else null
+                            )
+                        }
+                    }
                 }
             }
         }
