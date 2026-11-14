@@ -4,6 +4,7 @@ import com.example.papb5.data.model.Student
 
 data class DetailUiState(
     val student: Student? = null,
+    val isFavorite: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )

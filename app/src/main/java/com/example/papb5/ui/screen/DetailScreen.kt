@@ -25,6 +25,7 @@ import com.example.papb5.ui.detail.DetailUiState
 @Composable
 fun DetailScreen(
     uiState: DetailUiState,
+    onToggleFavorite: () -> Unit,
     onBack: () -> Unit,
     onOpenProfile: () -> Unit
 ) {
@@ -100,6 +101,23 @@ fun DetailScreen(
                         Text("Program: ${student.program}")
                         Text("Angkatan: ${student.year}")
                     }
+                }
+
+                Button(
+                    onClick = onToggleFavorite,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (uiState.isFavorite)
+                            MaterialTheme.colorScheme.secondary
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(
+                        if (uiState.isFavorite)
+                            "Hapus dari Favorit"
+                        else
+                            "Simpan ke Favorit"
+                    )
                 }
 
                 OutlinedButton(onClick = onOpenProfile) {

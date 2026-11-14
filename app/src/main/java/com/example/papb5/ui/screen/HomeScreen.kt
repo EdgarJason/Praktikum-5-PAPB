@@ -32,6 +32,8 @@ fun HomeScreen(
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: () -> Unit,
     onRefresh: () -> Unit,
+    onToggleSortOrder: () -> Unit,
+    onOpenFavorites: () -> Unit,
     onOpenDetail: (Int) -> Unit,
     onOpenProfile: () -> Unit,
     onOpenAbout: () -> Unit
@@ -53,6 +55,14 @@ fun HomeScreen(
             AssistChip(
                 onClick = onRefresh,
                 label = { Text("Refresh") }
+            )
+            AssistChip(
+                onClick = onOpenFavorites,
+                label = { Text("Favorit (Room)") }
+            )
+            AssistChip(
+                onClick = onToggleSortOrder,
+                label = { Text(if (uiState.sortAscending) "Urutan: A-Z (DataStore)" else "Urutan: Z-A (DataStore)") }
             )
             AssistChip(
                 onClick = onOpenProfile,
@@ -106,11 +116,17 @@ fun HomeScreen(
             }
 
             uiState.students.isNotEmpty() -> {
+                val displayStudents = if (uiState.sortAscending) {
+                    uiState.students.sortedBy { it.name }
+                } else {
+                    uiState.students.sortedByDescending { it.name }
+                }
+
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(uiState.students) { student ->
+                    items(displayStudents) { student ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()

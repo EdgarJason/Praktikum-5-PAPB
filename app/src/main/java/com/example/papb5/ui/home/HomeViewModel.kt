@@ -3,22 +3,52 @@ package com.example.papb5.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.papb5.data.preferences.UserPreferencesRepository
 import com.example.papb5.data.repository.StudentRepository
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@OptIn(FlowPreview::class)
 class HomeViewModel(
-    private val repository: StudentRepository
+    private val repository: StudentRepository,
+    private val preferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        loadStudents()
+        viewModelScope.launch {
+            val initialQuery = preferencesRepository.lastSearchQuery.first()
+            _uiState.update { it.copy(searchQuery = initialQuery) }
+            if (initialQuery.isNotEmpty()) {
+                searchStudents()
+            } else {
+                loadStudents()
+            }
+        }
+
+        viewModelScope.launch {
+            _uiState
+                .debounce(500)
+                .distinctUntilChanged { old, new -> old.searchQuery == new.searchQuery }
+                .collect { state ->
+                    preferencesRepository.saveLastSearchQuery(state.searchQuery)
+                }
+        }
+
+        viewModelScope.launch {
+            preferencesRepository.sortAscending.collect { isAscending ->
+                _uiState.update { it.copy(sortAscending = isAscending) }
+            }
+        }
     }
 
     fun loadStudents() {
@@ -42,6 +72,13 @@ class HomeViewModel(
 
     fun onSearchQueryChange(newQuery: String) {
         _uiState.update { it.copy(searchQuery = newQuery) }
+    }
+
+    fun toggleSortOrder() {
+        viewModelScope.launch {
+            val current = uiState.value.sortAscending
+            preferencesRepository.saveSortAscending(!current)
+        }
     }
 
     fun searchStudents() {
@@ -105,11 +142,14 @@ class HomeViewModel(
     }
 
     companion object {
-        fun factory(repository: StudentRepository): ViewModelProvider.Factory =
+        fun factory(
+            repository: StudentRepository,
+            preferencesRepository: UserPreferencesRepository
+        ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return HomeViewModel(repository) as T
+                    return HomeViewModel(repository, preferencesRepository) as T
                 }
             }
     }
