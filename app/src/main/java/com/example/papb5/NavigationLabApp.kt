@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.papb5.data.local.DatabaseProvider
+import com.example.papb5.data.location.DefaultLocationRepository
 import com.example.papb5.data.network.RetrofitClient
 import com.example.papb5.data.preferences.UserPreferencesRepository
 import com.example.papb5.data.repository.DefaultStudentRepository
@@ -22,11 +23,14 @@ import com.example.papb5.data.source.StudentRemoteDataSource
 import com.example.papb5.ui.detail.DetailViewModel
 import com.example.papb5.ui.favorites.FavoritesViewModel
 import com.example.papb5.ui.home.HomeViewModel
+import com.example.papb5.ui.location.LocationViewModel
 import com.example.papb5.ui.screen.AboutScreen
 import com.example.papb5.ui.screen.DetailScreen
 import com.example.papb5.ui.screen.FavoritesScreen
 import com.example.papb5.ui.screen.HomeScreen
+import com.example.papb5.ui.screen.LocationScreen
 import com.example.papb5.ui.screen.ProfileScreen
+import com.google.android.gms.location.LocationServices
 
 @Composable
 fun NavigationLabApp() {
@@ -43,6 +47,14 @@ fun NavigationLabApp() {
         FavoriteRepository(
             DatabaseProvider.getDatabase(context).favoriteStudentDao()
         )
+    }
+
+    val locationClient = remember {
+        LocationServices.getFusedLocationProviderClient(context)
+    }
+
+    val locationRepository = remember {
+        DefaultLocationRepository(context, locationClient)
     }
 
     val navController = rememberNavController()
@@ -65,6 +77,9 @@ fun NavigationLabApp() {
                 onToggleSortOrder = homeViewModel::toggleSortOrder,
                 onOpenFavorites = {
                     navController.navigate(Routes.FAVORITES)
+                },
+                onOpenLocation = {
+                    navController.navigate(Routes.LOCATION)
                 },
                 onOpenDetail = { id ->
                     navController.navigate(Routes.detail(id))
@@ -114,6 +129,15 @@ fun NavigationLabApp() {
                 onOpenDetail = { id ->
                     navController.navigate(Routes.detail(id))
                 },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Routes.LOCATION) {
+            val locationViewModel: LocationViewModel = viewModel(
+                factory = LocationViewModel.factory(locationRepository)
+            )
+            LocationScreen(
+                viewModel = locationViewModel,
                 onBack = { navController.popBackStack() }
             )
         }

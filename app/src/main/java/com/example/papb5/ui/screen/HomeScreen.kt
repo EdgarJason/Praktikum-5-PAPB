@@ -34,6 +34,7 @@ fun HomeScreen(
     onRefresh: () -> Unit,
     onToggleSortOrder: () -> Unit,
     onOpenFavorites: () -> Unit,
+    onOpenLocation: () -> Unit,
     onOpenDetail: (Int) -> Unit,
     onOpenProfile: () -> Unit,
     onOpenAbout: () -> Unit
@@ -55,6 +56,10 @@ fun HomeScreen(
             AssistChip(
                 onClick = onRefresh,
                 label = { Text("Refresh") }
+            )
+            AssistChip(
+                onClick = onOpenLocation,
+                label = { Text("Lokasi (GPS)") }
             )
             AssistChip(
                 onClick = onOpenFavorites,
